@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Zap, Calendar, Timer, BookOpen, FileUp, LineChart,
-  CheckSquare, Moon, ArrowRight, Sparkles,
+  CheckSquare, Moon, ArrowRight, Sparkles, ArrowUpRight,
 } from "lucide-react";
 import dashboardImg from "@/assets/dashboard-mockup.jpg";
 
@@ -20,75 +20,124 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "StudyFlow — Foco e produtividade para estudantes" },
       {
         property: "og:description",
-        content: "Pomodoro, tarefas, calendário e progresso semanal num app minimalista em dark mode.",
+        content:
+          "Pomodoro, tarefas, calendário e progresso semanal num app minimalista em dark mode.",
       },
     ],
   }),
 });
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 28 },
   visible: { opacity: 1, y: 0 },
 };
 
-function Section({
+function Reveal({
   children,
+  delay = 0,
   className = "",
-  id,
 }: {
   children: React.ReactNode;
+  delay?: number;
   className?: string;
-  id?: string;
 }) {
   return (
-    <motion.section
-      id={id}
+    <motion.div
+      variants={fadeUp}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.7, ease: "easeOut", staggerChildren: 0.08 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay }}
       className={className}
     >
       {children}
-    </motion.section>
+    </motion.div>
+  );
+}
+
+function Particles() {
+  const dots = useMemo(
+    () =>
+      Array.from({ length: 28 }).map(() => ({
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        size: Math.random() * 2 + 0.5,
+        delay: Math.random() * 6,
+        duration: 6 + Math.random() * 6,
+        opacity: 0.15 + Math.random() * 0.45,
+      })),
+    [],
+  );
+  return (
+    <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
+      {dots.map((d, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full bg-white"
+          style={{
+            left: `${d.left}%`,
+            top: `${d.top}%`,
+            width: d.size,
+            height: d.size,
+            opacity: d.opacity,
+            animation: `float-particle ${d.duration}s ease-in-out ${d.delay}s infinite`,
+          }}
+        />
+      ))}
+    </div>
   );
 }
 
 function Navbar({ onCta }: { onCta: () => void }) {
-  const [hidden, setHidden] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    const prev = scrollY.getPrevious() ?? 0;
-    setHidden(latest > prev && latest > 120);
-  });
+  useMotionValueEvent(scrollY, "change", (v) => setScrolled(v > 24));
 
   return (
-    <motion.header
-      initial={{ y: -80 }}
-      animate={{ y: hidden ? -80 : 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className="fixed top-0 inset-x-0 z-50 px-4 pt-4"
+    <header
+      className="fixed top-0 inset-x-0 z-50 transition-all duration-300"
+      style={{
+        backgroundColor: scrolled ? "rgba(8,8,8,0.8)" : "transparent",
+        backdropFilter: scrolled ? "blur(14px)" : "none",
+        borderBottom: scrolled ? "1px solid #1a1a1a" : "1px solid transparent",
+      }}
     >
-      <div className="mx-auto max-w-6xl glass rounded-2xl px-5 py-3 flex items-center justify-between">
-        <a href="#top" className="flex items-center gap-2 group">
-          <div className="size-8 rounded-lg bg-gradient-primary grid place-items-center glow-primary">
-            <Zap className="size-4 text-primary-foreground" strokeWidth={2.5} />
+      <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
+        <a href="#top" className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-violet-gradient grid place-items-center shadow-[0_0_20px_rgba(124,58,237,0.45)]">
+            <Zap className="size-4 text-white" strokeWidth={2.5} />
           </div>
-          <span className="font-semibold tracking-tight text-lg">StudyFlow</span>
+          <span className="font-semibold tracking-tight text-[17px] text-white">StudyFlow</span>
         </a>
-        <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-          <a href="#funcionalidades" className="hover:text-foreground transition-colors">Funcionalidades</a>
-          <a href="#como-funciona" className="hover:text-foreground transition-colors">Como funciona</a>
-          <a href="#planos" className="hover:text-foreground transition-colors">Planos</a>
+        <nav className="hidden md:flex items-center gap-9 text-[13.5px] text-zinc-400">
+          <a href="#funcionalidades" className="hover:text-white transition-colors">Funcionalidades</a>
+          <a href="#como-funciona" className="hover:text-white transition-colors">Como funciona</a>
+          <a href="#planos" className="hover:text-white transition-colors">Planos</a>
         </nav>
         <button
           onClick={onCta}
-          className="rounded-lg bg-gradient-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+          className="rounded-full bg-violet-gradient px-4 py-2 text-[13px] font-medium text-white shadow-[0_0_20px_rgba(124,58,237,0.45)] hover:shadow-[0_0_30px_rgba(124,58,237,0.7)] transition-shadow"
         >
           Começar agora
         </button>
       </div>
-    </motion.header>
+    </header>
+  );
+}
+
+function BrowserFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl overflow-hidden border border-[#222] bg-[#0c0c0c]">
+      <div className="flex items-center gap-1.5 px-4 py-3 border-b border-[#1a1a1a] bg-[#0a0a0a]">
+        <span className="size-3 rounded-full bg-[#ff5f57]" />
+        <span className="size-3 rounded-full bg-[#febc2e]" />
+        <span className="size-3 rounded-full bg-[#28c840]" />
+        <div className="mx-auto text-[11px] text-zinc-500 font-mono">
+          studyflow.app/dashboard
+        </div>
+      </div>
+      {children}
+    </div>
   );
 }
 
@@ -102,18 +151,33 @@ function Landing() {
   };
 
   const steps = [
-    { icon: Calendar, emoji: "📅", title: "Organize", desc: "Crie matérias, tarefas e prazos em segundos." },
-    { icon: Timer, emoji: "⏱️", title: "Foque", desc: "Use o Pomodoro integrado e registre seu tempo de estudo." },
-    { icon: LineChart, emoji: "📈", title: "Evolua", desc: "Acompanhe seu progresso semanal com gráficos visuais." },
+    {
+      n: "01",
+      icon: Calendar,
+      title: "Organize",
+      desc: "Crie matérias, tarefas e prazos em segundos. Tudo num só lugar, sempre à mão.",
+    },
+    {
+      n: "02",
+      icon: Timer,
+      title: "Foque",
+      desc: "Pomodoro integrado, sessões cronometradas e zero distrações.",
+    },
+    {
+      n: "03",
+      icon: LineChart,
+      title: "Evolua",
+      desc: "Acompanhe seu progresso semanal com gráficos visuais que importam.",
+    },
   ];
 
   const features = [
-    { icon: Timer, title: "Timer Pomodoro integrado" },
-    { icon: CheckSquare, title: "Gestão de tarefas por matéria" },
-    { icon: Calendar, title: "Calendário de prazos" },
-    { icon: FileUp, title: "Upload de PDFs por matéria" },
-    { icon: LineChart, title: "Progresso semanal visual" },
-    { icon: Moon, title: "Dark Mode nativo" },
+    { icon: Timer, title: "Timer Pomodoro integrado", desc: "25/5 com estado global.", color: "#a78bfa" },
+    { icon: CheckSquare, title: "Tarefas por matéria", desc: "Status, prioridade e prazo.", color: "#60a5fa" },
+    { icon: Calendar, title: "Calendário de prazos", desc: "Mensal e semanal.", color: "#34d399" },
+    { icon: FileUp, title: "Upload de PDFs", desc: "Tudo organizado por matéria.", color: "#fbbf24" },
+    { icon: LineChart, title: "Progresso semanal", desc: "Visual e honesto.", color: "#f472b6" },
+    { icon: Moon, title: "Dark Mode nativo", desc: "Feito pra durar a noite.", color: "#fb923c" },
   ];
 
   return (
@@ -124,219 +188,293 @@ function Landing() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
           id="top"
-          className="relative min-h-screen overflow-hidden"
+          className="relative min-h-screen"
         >
-          {/* Ambient glow */}
+          {/* Global noise overlay */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-[800px]"
-            style={{ background: "var(--gradient-hero)" }}
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
-              backgroundSize: "32px 32px",
-            }}
+            className="fixed inset-0 noise-bg pointer-events-none opacity-[0.06] mix-blend-overlay z-[1]"
           />
 
           <Navbar onCta={goLogin} />
 
           {/* HERO */}
-          <main className="relative">
-            <Section className="pt-40 pb-24 px-6">
-              <div className="mx-auto max-w-5xl text-center">
-                <motion.div variants={fadeUp} transition={{ duration: 0.6 }}>
-                  <span className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs text-muted-foreground">
-                    <Sparkles className="size-3.5 text-primary" />
+          <section className="relative pt-36 md:pt-44 pb-24 px-6 overflow-hidden">
+            {/* Diffused violet glow behind title */}
+            <div
+              aria-hidden
+              className="absolute left-1/2 top-40 -translate-x-1/2 w-[800px] h-[500px] rounded-full pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center, rgba(124,58,237,0.35), rgba(79,70,229,0.15) 40%, transparent 70%)",
+                filter: "blur(60px)",
+              }}
+            />
+            <Particles />
+
+            <div className="relative mx-auto max-w-5xl text-center">
+              <Reveal>
+                <div className="inline-block shimmer-pill">
+                  <span className="inline-flex items-center gap-2 px-4 py-1.5 text-[12px] text-zinc-300">
+                    <Sparkles className="size-3.5 text-violet-400" />
                     Feito para estudantes que levam a sério
                   </span>
-                </motion.div>
+                </div>
+              </Reveal>
 
-                <motion.h1
-                  variants={fadeUp}
-                  transition={{ duration: 0.7 }}
-                  className="mt-8 text-5xl md:text-7xl font-semibold tracking-tight text-gradient leading-[1.05]"
+              <Reveal delay={0.08}>
+                <h1
+                  className="mt-8 font-extrabold tracking-tight text-white leading-[1.02]"
+                  style={{ fontSize: "clamp(56px, 9vw, 96px)", letterSpacing: "-0.04em" }}
                 >
                   Pare de procrastinar.
                   <br />
-                  Comece a estudar de verdade.
-                </motion.h1>
+                  Comece a{" "}
+                  <span className="text-violet-gradient">estudar</span>
+                  <br className="hidden md:block" />
+                  com{" "}
+                  <span className="text-violet-gradient">foco</span> de verdade.
+                </h1>
+              </Reveal>
 
-                <motion.p
-                  variants={fadeUp}
-                  transition={{ duration: 0.7 }}
-                  className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground"
-                >
+              <Reveal delay={0.16}>
+                <p className="mt-7 mx-auto max-w-[480px] text-[15.5px] leading-relaxed text-zinc-400">
                   Organize suas matérias, tarefas e tempo de foco em um só lugar.
                   O StudyFlow é seu parceiro de estudos diário.
-                </motion.p>
+                </p>
+              </Reveal>
 
-                <motion.div
-                  variants={fadeUp}
-                  transition={{ duration: 0.7 }}
-                  className="mt-10 flex flex-wrap items-center justify-center gap-3"
-                >
+              <Reveal delay={0.24}>
+                <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
                   <button
                     onClick={goLogin}
-                    className="group inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-6 py-3 text-sm font-medium text-primary-foreground glow-primary hover:opacity-95 transition-all"
+                    className="group inline-flex items-center gap-2 rounded-xl bg-violet-gradient px-6 py-3.5 text-[14px] font-medium text-white shadow-[0_0_30px_rgba(124,58,237,0.5)] hover:shadow-[0_0_50px_rgba(124,58,237,0.85)] transition-shadow"
                   >
                     Começar grátis
                     <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
                   </button>
                   <a
                     href="#como-funciona"
-                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-secondary/40 px-6 py-3 text-sm font-medium text-foreground hover:bg-secondary/70 transition-colors"
+                    className="inline-flex items-center gap-2 rounded-xl border border-[#333] bg-transparent px-6 py-3.5 text-[14px] font-medium text-white hover:bg-[#111] hover:border-[#444] transition-all"
                   >
                     Ver como funciona
                   </a>
-                </motion.div>
+                </div>
+              </Reveal>
 
-                {/* Browser frame mockup */}
-                <motion.div
-                  variants={fadeUp}
-                  transition={{ duration: 0.9, delay: 0.1 }}
+              {/* Mockup with 3D tilt + fade-to-black */}
+              <Reveal delay={0.32}>
+                <div
                   className="mt-20 mx-auto max-w-5xl"
+                  style={{ perspective: "1800px" }}
                 >
-                  <div className="glass rounded-2xl p-2 shadow-2xl glow-primary">
-                    <div className="flex items-center gap-1.5 px-3 py-2">
-                      <span className="size-2.5 rounded-full bg-[#ff5f57]" />
-                      <span className="size-2.5 rounded-full bg-[#febc2e]" />
-                      <span className="size-2.5 rounded-full bg-[#28c840]" />
-                      <div className="mx-auto text-xs text-muted-foreground">
-                        studyflow.app/dashboard
-                      </div>
-                    </div>
-                    <img
-                      src={dashboardImg}
-                      alt="Dashboard do StudyFlow com Pomodoro, tarefas do dia e progresso semanal"
-                      width={1920}
-                      height={1080}
-                      className="rounded-xl w-full h-auto"
+                  <div
+                    className="relative"
+                    style={{ transform: "rotateX(8deg)", transformStyle: "preserve-3d" }}
+                  >
+                    <BrowserFrame>
+                      <img
+                        src={dashboardImg}
+                        alt="Dashboard do StudyFlow com Pomodoro, tarefas e progresso semanal"
+                        width={1536}
+                        height={1024}
+                        className="w-full h-auto block"
+                      />
+                    </BrowserFrame>
+                    {/* Fade to black */}
+                    <div
+                      aria-hidden
+                      className="absolute inset-x-0 bottom-0 h-48 pointer-events-none"
+                      style={{
+                        background:
+                          "linear-gradient(to bottom, transparent, #080808 85%)",
+                      }}
+                    />
+                    {/* Glow under */}
+                    <div
+                      aria-hidden
+                      className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-[70%] h-24 blur-3xl opacity-60 rounded-full"
+                      style={{ background: "var(--gradient-violet)" }}
                     />
                   </div>
-                  <div
-                    aria-hidden
-                    className="mx-auto h-24 max-w-3xl -mt-8 blur-3xl opacity-50"
-                    style={{ background: "var(--gradient-primary)" }}
-                  />
-                </motion.div>
-              </div>
-            </Section>
+                </div>
+              </Reveal>
+            </div>
+          </section>
 
-            {/* COMO FUNCIONA */}
-            <Section id="como-funciona" className="py-24 px-6">
-              <div className="mx-auto max-w-6xl">
-                <motion.div variants={fadeUp} transition={{ duration: 0.6 }} className="text-center max-w-2xl mx-auto">
-                  <h2 className="text-4xl md:text-5xl font-semibold tracking-tight">
-                    Tudo que você precisa em um lugar só
+          <div className="section-divider mx-auto max-w-6xl" />
+
+          {/* COMO FUNCIONA */}
+          <section id="como-funciona" className="relative py-28 px-6">
+            <div className="mx-auto max-w-6xl">
+              <Reveal>
+                <div className="text-center max-w-2xl mx-auto">
+                  <span className="text-[12px] uppercase tracking-[0.2em] text-violet-400 font-medium">
+                    Como funciona
+                  </span>
+                  <h2
+                    className="mt-4 font-extrabold tracking-tight text-white"
+                    style={{ fontSize: "clamp(34px, 5vw, 54px)", letterSpacing: "-0.03em" }}
+                  >
+                    Tudo que você precisa
+                    <br />
+                    em um lugar só
                   </h2>
-                  <p className="mt-4 text-muted-foreground">
-                    Três passos simples para transformar sua rotina de estudos.
-                  </p>
-                </motion.div>
+                </div>
+              </Reveal>
 
-                <div className="mt-14 grid md:grid-cols-3 gap-5">
+              <div className="relative mt-16">
+                {/* Connector line desktop */}
+                <div
+                  aria-hidden
+                  className="hidden md:block absolute top-16 left-[16%] right-[16%] h-px"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, transparent, #2d2640 20%, #4f46e5 50%, #2d2640 80%, transparent)",
+                  }}
+                />
+                <div className="grid md:grid-cols-3 gap-5 relative">
                   {steps.map((s, i) => (
-                    <motion.div
-                      key={s.title}
-                      variants={fadeUp}
-                      transition={{ duration: 0.6, delay: i * 0.08 }}
-                      className="glass rounded-2xl p-7 hover:border-primary/30 transition-colors group"
-                    >
-                      <div className="size-12 rounded-xl bg-secondary/60 grid place-items-center text-2xl group-hover:bg-gradient-primary transition-colors">
-                        <s.icon className="size-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                    <Reveal key={s.n} delay={i * 0.1}>
+                      <div className="relative overflow-hidden rounded-2xl border border-[#222] bg-[#111] p-7 h-full">
+                        <span
+                          aria-hidden
+                          className="absolute top-4 right-5 text-[64px] font-extrabold leading-none select-none"
+                          style={{
+                            color: "transparent",
+                            WebkitTextStroke: "1px rgba(124,58,237,0.35)",
+                          }}
+                        >
+                          {s.n}
+                        </span>
+                        <div className="size-12 rounded-xl grid place-items-center bg-[#1e1b4b] border border-violet-500/20">
+                          <s.icon className="size-5 text-violet-300" />
+                        </div>
+                        <h3 className="mt-6 text-xl font-semibold text-white tracking-tight">
+                          {s.title}
+                        </h3>
+                        <p className="mt-2 text-[14px] leading-relaxed text-zinc-400">
+                          {s.desc}
+                        </p>
                       </div>
-                      <h3 className="mt-5 text-xl font-semibold">
-                        <span className="mr-2">{s.emoji}</span>{s.title}
-                      </h3>
-                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
-                    </motion.div>
+                    </Reveal>
                   ))}
                 </div>
               </div>
-            </Section>
+            </div>
+          </section>
 
-            {/* FUNCIONALIDADES */}
-            <Section id="funcionalidades" className="py-24 px-6">
-              <div className="mx-auto max-w-6xl">
-                <motion.div variants={fadeUp} transition={{ duration: 0.6 }} className="text-center max-w-2xl mx-auto">
-                  <h2 className="text-4xl md:text-5xl font-semibold tracking-tight">
-                    Recursos que fazem a diferença
+          <div className="section-divider mx-auto max-w-6xl" />
+
+          {/* FUNCIONALIDADES */}
+          <section id="funcionalidades" className="relative py-28 px-6">
+            <div className="mx-auto max-w-6xl">
+              <Reveal>
+                <div className="text-center max-w-2xl mx-auto">
+                  <span className="text-[12px] uppercase tracking-[0.2em] text-violet-400 font-medium">
+                    Recursos
+                  </span>
+                  <h2
+                    className="mt-4 font-extrabold tracking-tight text-white"
+                    style={{ fontSize: "clamp(34px, 5vw, 54px)", letterSpacing: "-0.03em" }}
+                  >
+                    Pequenos detalhes,
+                    <br />
+                    grande diferença.
                   </h2>
-                  <p className="mt-4 text-muted-foreground">
-                    Pensado para o dia a dia real de um estudante.
-                  </p>
-                </motion.div>
+                </div>
+              </Reveal>
 
-                <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {features.map((f, i) => (
+              <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {features.map((f, i) => (
+                  <Reveal key={f.title} delay={i * 0.06}>
                     <motion.div
-                      key={f.title}
-                      variants={fadeUp}
-                      transition={{ duration: 0.5, delay: i * 0.05 }}
-                      className="glass rounded-xl p-5 flex items-center gap-4 hover:bg-secondary/30 transition-colors"
+                      whileHover={{ y: -4 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      className="group relative rounded-2xl border border-[#222] bg-[#111] p-6 h-full hover:border-violet-500/50 transition-colors"
                     >
-                      <div className="size-10 shrink-0 rounded-lg bg-primary/10 grid place-items-center">
-                        <f.icon className="size-5 text-primary" />
+                      <div
+                        className="size-11 rounded-xl grid place-items-center mb-5"
+                        style={{
+                          backgroundColor: `${f.color}1a`,
+                          border: `1px solid ${f.color}40`,
+                        }}
+                      >
+                        <f.icon className="size-5" style={{ color: f.color }} />
                       </div>
-                      <span className="text-sm font-medium">{f.title}</span>
+                      <h3 className="text-[15.5px] font-semibold text-white tracking-tight">
+                        {f.title}
+                      </h3>
+                      <p className="mt-1.5 text-[13.5px] text-zinc-500">{f.desc}</p>
+                      <ArrowUpRight className="absolute top-5 right-5 size-4 text-zinc-700 group-hover:text-violet-400 transition-colors" />
                     </motion.div>
-                  ))}
-                </div>
+                  </Reveal>
+                ))}
               </div>
-            </Section>
+            </div>
+          </section>
 
-            {/* CTA FINAL */}
-            <Section id="planos" className="py-24 px-6">
-              <div className="mx-auto max-w-4xl">
-                <motion.div
-                  variants={fadeUp}
-                  transition={{ duration: 0.7 }}
-                  className="relative glass rounded-3xl px-8 py-16 text-center overflow-hidden"
-                >
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 opacity-60"
-                    style={{ background: "var(--gradient-hero)" }}
-                  />
-                  <div className="relative">
-                    <h2 className="text-4xl md:text-5xl font-semibold tracking-tight text-gradient">
-                      Pronto para estudar com mais foco?
-                    </h2>
-                    <p className="mt-4 text-muted-foreground text-lg">
-                      Comece agora, é grátis.
-                    </p>
-                    <button
-                      onClick={goLogin}
-                      className="mt-10 inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-8 py-4 text-base font-medium text-primary-foreground glow-primary hover:opacity-95 transition-all"
-                    >
-                      Criar minha conta
-                      <ArrowRight className="size-4" />
-                    </button>
-                  </div>
-                </motion.div>
-              </div>
-            </Section>
+          <div className="section-divider mx-auto max-w-6xl" />
 
-            {/* FOOTER */}
-            <footer className="border-t border-border/60 px-6 py-10">
-              <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <div className="size-6 rounded-md bg-gradient-primary grid place-items-center">
-                    <BookOpen className="size-3.5 text-primary-foreground" />
+          {/* CTA FINAL */}
+          <section id="planos" className="relative py-28 px-6">
+            <div className="mx-auto max-w-4xl">
+              <Reveal>
+                <div className="conic-border">
+                  <div className="relative rounded-[26.5px] px-8 py-20 text-center overflow-hidden bg-[#0d0d0d]">
+                    <div
+                      aria-hidden
+                      className="absolute inset-0 opacity-70 pointer-events-none"
+                      style={{
+                        background:
+                          "radial-gradient(ellipse at center, rgba(124,58,237,0.25), transparent 60%)",
+                      }}
+                    />
+                    <div className="relative">
+                      <h2
+                        className="font-extrabold tracking-tight text-white"
+                        style={{
+                          fontSize: "clamp(36px, 5.5vw, 60px)",
+                          letterSpacing: "-0.035em",
+                          lineHeight: 1.05,
+                        }}
+                      >
+                        Pronto para estudar
+                        <br />
+                        com mais <span className="text-violet-gradient">foco</span>?
+                      </h2>
+                      <p className="mt-5 text-zinc-400 text-[16px]">
+                        Comece agora, é grátis.
+                      </p>
+                      <button
+                        onClick={goLogin}
+                        className="mt-10 inline-flex items-center gap-2 rounded-xl bg-violet-gradient px-8 py-4 text-[15px] font-medium text-white shadow-[0_0_40px_rgba(124,58,237,0.6)] hover:shadow-[0_0_60px_rgba(124,58,237,0.9)] transition-shadow"
+                      >
+                        Criar minha conta
+                        <ArrowRight className="size-4" />
+                      </button>
+                    </div>
                   </div>
-                  <span>© 2026 StudyFlow</span>
                 </div>
-                <div className="flex items-center gap-6">
-                  <a href="#" className="hover:text-foreground transition-colors">Privacidade</a>
-                  <a href="#" className="hover:text-foreground transition-colors">Termos</a>
+              </Reveal>
+            </div>
+          </section>
+
+          {/* FOOTER */}
+          <footer className="relative px-6 py-12 border-t border-[#1a1a1a]">
+            <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4 text-[13px] text-zinc-500">
+              <div className="flex items-center gap-2.5">
+                <div className="size-6 rounded-md bg-violet-gradient grid place-items-center">
+                  <BookOpen className="size-3.5 text-white" />
                 </div>
+                <span>© 2026 StudyFlow</span>
               </div>
-            </footer>
-          </main>
+              <div className="flex items-center gap-7">
+                <a href="#" className="hover:text-white transition-colors">Privacidade</a>
+                <a href="#" className="hover:text-white transition-colors">Termos</a>
+              </div>
+            </div>
+          </footer>
         </motion.div>
       )}
     </AnimatePresence>
